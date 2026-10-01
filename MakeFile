@@ -8,7 +8,8 @@ ifeq ($(OS),Windows_NT)
     CXX       ?= g++
     TARGET    := $(BIN_DIR)/$(NAME).dll
     JNI_OS    := win32
-    LDLIBS    := -lkernel32 -luser32 -lgdi32 -lopengl32
+    JDK_LIB   := "$(JAVA_HOME)/lib"
+    LDLIBS    := -lkernel32 -luser32 -lgdi32 -lopengl32 -L$(JDK_LIB) -ljvm
     LDFLAGS_P := -static-libgcc -static-libstdc++ -Wl,--kill-at
     MKDIR     = if not exist "$(subst /,\,$(1))" mkdir "$(subst /,\,$(1))"
     RMDIR     = if exist "$(subst /,\,$(1))" rmdir /S /Q "$(subst /,\,$(1))"
@@ -30,7 +31,7 @@ JNI_INC := -I"$(JAVA_HOME)/include" -I"$(JAVA_HOME)/include/$(JNI_OS)"
 # --- Flags ----------------------------------------------------
 STD       := -std=c++17
 WARN      := -Wall -Wextra -Wpedantic
-CXXFLAGS  := $(STD) $(WARN) -I$(INC_DIR) $(JNI_INC) -fPIC -MMD -MP
+CXXFLAGS  := $(STD) $(WARN) -I$(INC_DIR) -I$(SRC_DIR)/sdk $(JNI_INC) -fPIC -MMD -MP
 LDFLAGS   := -shared $(LDFLAGS_P)
 
 # Build mode: make MODE=debug  (default: release)
@@ -43,7 +44,7 @@ else
 endif
 
 # --- Sources / objects ----------------------------------------
-SRCS := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*/*.cpp)
+SRCS := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*/*.cpp) $(wildcard $(SRC_DIR)/*/*/*.cpp)
 OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
 DEPS := $(OBJS:.o=.d)
 
