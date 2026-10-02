@@ -1,9 +1,8 @@
 #pragma once
-#include <jni/jni.h>
 
-namespace classes {
-  void load();
+struct classesT {
+  const char* minecraft = "net.minecraft.class_310";
+  const char* player    = "net.minecraft.class_746";
+};
 
-  inline jclass minecraft_class = nullptr;
-
-}
+inline constexpr classesT classes{};

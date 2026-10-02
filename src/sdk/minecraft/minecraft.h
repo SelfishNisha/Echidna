@@ -1,8 +1,17 @@
-#pragma once
+#pragma once 
 #include "../jvm.h"
 
-class c_minecraft : public c_jobject {
-  public: 
-    c_minecraft(jobject object_in);
-    static c_minecraft get_minecraft();
+class cEntity : public cJObject {
+  public:
+    cEntity(jobject objectIn) : cJObject(objectIn) {}
 };
+
+class cMinecraft : public cJObject {
+  public:
+    cMinecraft(jobject objectIn) : cJObject(objectIn) {}
+
+    static cMinecraft getMinecraft();
+    cEntity getPlayer() const;
+};
+
+void tick();

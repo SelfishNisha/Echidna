@@ -1,26 +1,38 @@
 #pragma once
 #include <jni/jni.h>
+#include <string>
 
 namespace jvm {
-  void load();
-  jclass find_class(const char* dotted_name); // e.g. "net.minecraft.class_310"
+  bool init(const char *probeClass); // attach + find the game class loader
+  void shutdown(); // frees everything, detaches calling thread
+  bool isReady();
 
-  inline JavaVM* vm = nullptr;
-  inline JNIEnv* env = nullptr;
-  inline jobject class_loader = nullptr; // global ref
+  JNIEnv* getEnv(); // per-thread env, auto-attaches. null if unavailable
+  void detachCurrentThread(); // detaches the calling thread from the jvm, if attached
+
+  // class lookup accepts "a.b.C" or "a/b/C", cached, returns a global ref 
+  jclass lookFor(const std::string& name);
+
+  // cached id lookups
+  jfieldID fieldId(jclass cls, const char *name, const char *sig, bool isStatic = false);
+  jmethodID methodId(jclass cls, const char *name, const char *sig, bool isStatic = false);
+
+  // returns true if a Java exception was pending (logs and clears it)
+  bool checkException(const std::string& where = "");
+
+  std::string lastError();
 }
 
-class c_jobject {
+// Owns a GLOBAL ref, so it is safe to create on one thread and use/destroy on another.
+class cJObject {
   public:
-   c_jobject(jobject object_in);
-   ~c_jobject();
+    cJObject(jobject localRef); // takes ownership of the local ref and promotes it
+    ~cJObject();
 
-   c_jobject(const c_jobject&) = delete;
-   c_jobject& operator=(const c_jobject&) = delete;
+    cJObject(const cJObject&) = delete;
+    cJObject& operator=(const cJObject&) = delete;
+    cJObject(cJObject&& other) noexcept;
+    cJObject& operator=(cJObject&& other) noexcept;
 
-   c_jobject(c_jobject&& other) noexcept : cached_object(other.cached_object) {
-     other.cached_object = nullptr;
-   }
-
-   jobject cached_object = nullptr;
+    jobject chachedObject = nullptr; // the global ref, or null if none
 };

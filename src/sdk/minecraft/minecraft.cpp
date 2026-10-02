@@ -1,14 +1,28 @@
 #include "minecraft.h"
 #include "../classes/classes.h"
-#include "../jvm.h"
 
-c_minecraft::c_minecraft(jobject object_in) : c_jobject(object_in) {
+cMinecraft cMinecraft::getMinecraft() {
+  JNIEnv* env = jvm::getEnv();
+  jclass cls = jvm::lookFor(classes.minecraft);
 
+  if (!env || !cls) return cMinecraft(nullptr);
+
+  jfieldID field = jvm::fieldId(cls, "field_1700", "Lnet/minecraft/class_310;", true);
+
+  if (!field) return cMinecraft(nullptr);
+
+  return cMinecraft(env->GetStaticObjectField(cls, field));
 }
 
-c_minecraft c_minecraft::get_minecraft() {
-  static jfieldID instance_field = jvm::env->GetStaticFieldID(
-      classes::minecraft_class, "field_1700", "Lnet/minecraft/class_310;");
+cEntity cMinecraft::getPlayer() const {
+  JNIEnv *env = jvm::getEnv();
+  jclass cls = jvm::lookFor(classes.minecraft);
 
-  return c_minecraft(jvm::env->GetStaticObjectField(classes::minecraft_class, instance_field));
+  if (!env || !cls || !chachedObject) return cEntity(nullptr);
+
+  jfieldID field = jvm::fieldId(cls, "field_1724", "Lnet/minecraft/class_746;");
+  
+  if (!field) return cEntity(nullptr);
+
+  return cEntity(env->GetObjectField(chachedObject, field)); // null in the main menu, which is fine
 }
