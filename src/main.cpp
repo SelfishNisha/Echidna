@@ -33,7 +33,7 @@ DWORD WINAPI threadEntry(LPVOID param) {
         std::cout << "[ERROR] Unknown error occurred" << std::endl;
       }
 
-      Sleep(1000); // will be changed later.
+      Sleep(10); // will be changed later.
     }
   } else {
     std::cout << "[Echidna] Setup failed: " << jvm::lastError() << std::endl;
