@@ -3,18 +3,21 @@ SRC_DIR   := src
 INC_DIR   := include
 BUILD_DIR := build
 BIN_DIR   := bin
+TP_DIR    := third_party
 
 ifeq ($(OS),Windows_NT)
     CXX       ?= g++
+    CC        := gcc
     TARGET    := $(BIN_DIR)/$(NAME).dll
     JNI_OS    := win32
     JDK_LIB   := "$(JAVA_HOME)/lib"
-    LDLIBS    := -lkernel32 -luser32 -lgdi32 -lopengl32 -L$(JDK_LIB) -ljvm
+    LDLIBS    := -lkernel32 -luser32 -lgdi32 -lopengl32 -limm32 -ldwmapi -L$(JDK_LIB) -ljvm
     LDFLAGS_P := -static-libgcc -static-libstdc++ -Wl,--kill-at
     MKDIR     = if not exist "$(subst /,\,$(1))" mkdir "$(subst /,\,$(1))"
     RMDIR     = if exist "$(subst /,\,$(1))" rmdir /S /Q "$(subst /,\,$(1))"
 else
     CXX       ?= g++
+    CC        := gcc
     TARGET    := $(BIN_DIR)/lib$(NAME).so
     JNI_OS    := linux
     LDLIBS    := -lGL
@@ -28,38 +31,76 @@ ifndef JAVA_HOME
 endif
 JNI_INC := -I"$(JAVA_HOME)/include" -I"$(JAVA_HOME)/include/$(JNI_OS)"
 
+# --- Third party include paths --------------------------------
+MH_INC    := -I$(TP_DIR)/minhook/include
+IMGUI_INC := -I$(TP_DIR)/imgui -I$(TP_DIR)/imgui/backends
+TP_INC    := $(MH_INC) $(IMGUI_INC)
+
 # --- Flags ----------------------------------------------------
 STD       := -std=c++17
 WARN      := -Wall -Wextra -Wpedantic
-CXXFLAGS  := $(STD) $(WARN) -I$(INC_DIR) -I$(SRC_DIR)/sdk $(JNI_INC) -fPIC -MMD -MP
+CXXFLAGS  := $(STD) $(WARN) -I$(INC_DIR) -I$(SRC_DIR)/sdk $(TP_INC) $(JNI_INC) -fPIC -MMD -MP
+# third party code: no warnings, no project flags
+TP_CXXFLAGS := $(STD) -w $(TP_INC) $(JNI_INC) -fPIC -MMD -MP
+TP_CFLAGS   := -w $(MH_INC) -fPIC -MMD -MP
 LDFLAGS   := -shared $(LDFLAGS_P)
 
 # Build mode: make MODE=debug  (default: release)
 MODE ?= release
 ifeq ($(MODE),debug)
-    CXXFLAGS += -O0 -g3 -DDEBUG
+    OPT := -O0 -g3 -DDEBUG
 else
-    CXXFLAGS += -O2 -DNDEBUG -fvisibility=hidden -ffunction-sections -fdata-sections
-    LDFLAGS  += -Wl,--gc-sections -s
+    OPT := -O2 -DNDEBUG -fvisibility=hidden -ffunction-sections -fdata-sections
+    LDFLAGS += -Wl,--gc-sections -s
 endif
+CXXFLAGS    += $(OPT)
+TP_CXXFLAGS += $(OPT)
+TP_CFLAGS   += $(OPT)
 
 # --- Sources / objects ----------------------------------------
 SRCS := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*/*.cpp) $(wildcard $(SRC_DIR)/*/*/*.cpp)
 OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
-DEPS := $(OBJS:.o=.d)
+
+MH_SRCS := $(TP_DIR)/minhook/src/buffer.c \
+           $(TP_DIR)/minhook/src/hook.c \
+           $(TP_DIR)/minhook/src/trampoline.c \
+           $(TP_DIR)/minhook/src/hde/hde64.c
+MH_OBJS := $(patsubst $(TP_DIR)/%.c,$(BUILD_DIR)/tp/%.o,$(MH_SRCS))
+
+IMGUI_SRCS := $(TP_DIR)/imgui/imgui.cpp \
+              $(TP_DIR)/imgui/imgui_draw.cpp \
+              $(TP_DIR)/imgui/imgui_tables.cpp \
+              $(TP_DIR)/imgui/imgui_widgets.cpp \
+              $(TP_DIR)/imgui/backends/imgui_impl_win32.cpp \
+              $(TP_DIR)/imgui/backends/imgui_impl_opengl3.cpp
+IMGUI_OBJS := $(patsubst $(TP_DIR)/%.cpp,$(BUILD_DIR)/tp/%.o,$(IMGUI_SRCS))
+
+ALL_OBJS := $(OBJS) $(MH_OBJS) $(IMGUI_OBJS)
+DEPS     := $(ALL_OBJS:.o=.d)
 
 # --- Rules ----------------------------------------------------
 .PHONY: all clean rebuild info
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS) | $(BIN_DIR)
-	$(CXX) $(OBJS) -o $@ $(LDFLAGS) $(LDLIBS)
+$(TARGET): $(ALL_OBJS) | $(BIN_DIR)
+	$(CXX) $(ALL_OBJS) -o $@ $(LDFLAGS) $(LDLIBS)
 	@echo Built $@ [$(MODE)]
 
+# project sources
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@$(call MKDIR,$(dir $@))
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# third party C (MinHook)
+$(BUILD_DIR)/tp/%.o: $(TP_DIR)/%.c
+	@$(call MKDIR,$(dir $@))
+	$(CC) $(TP_CFLAGS) -c $< -o $@
+
+# third party C++ (ImGui)
+$(BUILD_DIR)/tp/%.o: $(TP_DIR)/%.cpp
+	@$(call MKDIR,$(dir $@))
+	$(CXX) $(TP_CXXFLAGS) -c $< -o $@
 
 $(BIN_DIR):
 	@$(call MKDIR,$@)
@@ -74,5 +115,7 @@ info:
 	@echo Target : $(TARGET)
 	@echo Mode   : $(MODE)
 	@echo Sources: $(SRCS)
+	@echo MinHook: $(MH_SRCS)
+	@echo ImGui  : $(IMGUI_SRCS)
 
 -include $(DEPS)
