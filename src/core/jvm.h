@@ -34,5 +34,5 @@ class cJObject {
     cJObject(cJObject&& other) noexcept;
     cJObject& operator=(cJObject&& other) noexcept;
 
-    jobject chachedObject = nullptr; // the global ref, or null if none
+    jobject cachedObject = nullptr; // the global ref, or null if none
 };
