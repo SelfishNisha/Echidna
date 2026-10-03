@@ -58,7 +58,8 @@ TP_CXXFLAGS += $(OPT)
 TP_CFLAGS   += $(OPT)
 
 # --- Sources / objects ----------------------------------------
-SRCS := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*/*.cpp) $(wildcard $(SRC_DIR)/*/*/*.cpp)
+SPRINT_SRCS := $(wildcard $(SRC_DIR)/sdk/minecraft/sprint/*.cpp)
+SRCS := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*/*.cpp) $(wildcard $(SRC_DIR)/*/*/*.cpp) $(SPRINT_SRCS)
 OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
 
 MH_SRCS := $(TP_DIR)/minhook/src/buffer.c \

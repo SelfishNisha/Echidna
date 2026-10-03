@@ -5,6 +5,8 @@ class cEntity : public cJObject {
   public:
     cEntity(jobject objectIn) : cJObject(objectIn) {}
     void setSprinting(bool state);
+    bool canSprint();
+    bool isSprinting();
 };
 
 class cMinecraft : public cJObject {

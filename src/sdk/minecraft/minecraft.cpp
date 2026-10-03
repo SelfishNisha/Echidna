@@ -1,4 +1,5 @@
 #include "minecraft.h"
+#include "../fields/fields.h"
 #include "../classes/classes.h"
 
 cMinecraft cMinecraft::getMinecraft() {
@@ -7,7 +8,7 @@ cMinecraft cMinecraft::getMinecraft() {
 
   if (!env || !cls) return cMinecraft(nullptr);
 
-  jfieldID field = jvm::fieldId(cls, "field_1700", "Lnet/minecraft/class_310;", true);
+  jfieldID field = jvm::fieldId(cls, fields.minecraft, "Lnet/minecraft/class_310;", true);
 
   if (!field) return cMinecraft(nullptr);
 
@@ -20,7 +21,7 @@ cEntity cMinecraft::getPlayer() const {
 
   if (!env || !cls || !chachedObject) return cEntity(nullptr);
 
-  jfieldID field = jvm::fieldId(cls, "field_1724", "Lnet/minecraft/class_746;");
+  jfieldID field = jvm::fieldId(cls, fields.player, "Lnet/minecraft/class_746;");
   
   if (!field) return cEntity(nullptr);
 
