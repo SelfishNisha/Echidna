@@ -39,7 +39,7 @@ TP_INC    := $(MH_INC) $(IMGUI_INC)
 # --- Flags ----------------------------------------------------
 STD       := -std=c++17
 WARN      := -Wall -Wextra -Wpedantic
-CXXFLAGS  := $(STD) $(WARN) -I$(INC_DIR) -I$(SRC_DIR)/sdk $(TP_INC) $(JNI_INC) -fPIC -MMD -MP
+CXXFLAGS  := $(STD) $(WARN) -I$(INC_DIR) -I$(SRC_DIR)/core $(TP_INC) $(JNI_INC) -fPIC -MMD -MP
 # third party code: no warnings, no project flags
 TP_CXXFLAGS := $(STD) -w $(TP_INC) $(JNI_INC) -fPIC -MMD -MP
 TP_CFLAGS   := -w $(MH_INC) -fPIC -MMD -MP
@@ -58,7 +58,7 @@ TP_CXXFLAGS += $(OPT)
 TP_CFLAGS   += $(OPT)
 
 # --- Sources / objects ----------------------------------------
-SPRINT_SRCS := $(wildcard $(SRC_DIR)/sdk/minecraft/sprint/*.cpp)
+SPRINT_SRCS := $(wildcard $(SRC_DIR)/core/minecraft/sprint/*.cpp)
 SRCS := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*/*.cpp) $(wildcard $(SRC_DIR)/*/*/*.cpp) $(SPRINT_SRCS)
 OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
 
