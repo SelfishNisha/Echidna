@@ -9,9 +9,24 @@ class cEntity : public cJObject {
     bool isSprinting();
 };
 
+class cKeyBinding : public cJObject {
+  public:
+    cKeyBinding(jobject objectIn) : cJObject(objectIn) {}
+    void setPressed(bool pressed);
+};
+
+class cGameOptions : public cJObject {
+  public:
+    cGameOptions(jobject objectIn) : cJObject(objectIn) {}
+    cKeyBinding getSprintKey();
+};
+
+
+
 class cMinecraft : public cJObject {
   public:
     cMinecraft(jobject objectIn) : cJObject(objectIn) {}
+    cGameOptions getOptions();
 
     static cMinecraft getMinecraft();
     cEntity getPlayer() const;

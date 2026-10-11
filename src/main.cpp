@@ -38,7 +38,7 @@ DWORD WINAPI threadEntry(LPVOID param) {
         std::cout << "[ERROR] Unknown error occurred" << std::endl;
       }
 
-      Sleep(1000); // will be changed later.
+      Sleep(10); // will be changed later.
     }
   } else {
     // Setup failed: show why, then idle until the user chooses to unload.
